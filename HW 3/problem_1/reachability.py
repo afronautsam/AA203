@@ -68,14 +68,12 @@ class PlanarQuadrotor:
 
         y, v_y, phi, omega = state
 
-        t1Coeff = ((jnp.abs(grad_value[1])*jnp.abs(jnp.cos(phi)))/self.m) + ((jnp.abs(grad_value[3]))*jnp.abs(self.l)/self.Iyy)
-        t2Coeff = ((jnp.abs(grad_value[1])*jnp.abs(jnp.cos(phi)))/self.m) - ((jnp.abs(grad_value[3]))*jnp.abs(self.l)/self.Iyy)
+        t1Coeff = ((grad_value[1]*jnp.cos(phi))/self.m) + ((grad_value[3])*self.l/self.Iyy)
+        t2Coeff = ((grad_value[1]*jnp.cos(phi))/self.m) - ((grad_value[3])*self.l/self.Iyy)
 
         T1 = jnp.where(t1Coeff > 0, self.min_thrust_per_prop, self.max_thrust_per_prop)
-        T2 = jnp.where(t2Coeff > 0, self.min_thrust_per_prop, self.max_thrust_per_prop)
+        T2 = jnp.where(t2Coeff > 0, self.max_thrust_per_prop, self.min_thrust_per_prop)
         optControl = jnp.array([T1, T2])
-
-        #         optControl = tTried
         
         return optControl
         #################################################################################
@@ -108,8 +106,16 @@ def target_set(state):
     Returns:
         A scalar, nonpositive iff the state is in the target set.
     """
+
     # PART (b): WRITE YOUR CODE BELOW ###############################################
-    raise NotImplementedError
+    stateInd1 = jnp.where(state[0] >= 3 and state[0] <= 7, -1, 1) #returns a negative if y is feasible
+    stateInd2 = jnp.where(state[1] >= -1 and state[1] <= 1, -1, 1) #returns a negative is vY is feasible
+    stateInd3 = jnp.where(state[2] >= -jnp.pi/12 and state[2] <= jnp.pi/12, -1, 1) #as above
+    stateInd4 = jnp.where(state[4] >= -1 and state[4] <= 1, -1, 1)
+
+    stateInd = np.max([stateInd1,stateInd2,stateInd3,stateInd4])
+
+    return stateInd
     #################################################################################
 
 
