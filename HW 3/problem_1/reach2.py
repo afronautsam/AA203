@@ -1,4 +1,3 @@
-from os import sched_get_priority_max
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -66,7 +65,6 @@ class PlanarQuadrotor:
         # PART (a): WRITE YOUR CODE BELOW ###############################################
         # You may find `jnp.where` to be useful; see corresponding numpy docstring:
         # https://numpy.org/doc/stable/reference/generated/numpy.where.html
-
         y, v_y, phi, omega = state
 
         coeff1 = ((grad_value[1]*jnp.cos(phi))/self.m) + ((grad_value[3])*self.l/self.Iyy)
@@ -106,11 +104,9 @@ def target_set(state):
     
     Args:
         state: An unbatched (!) state vector, an array of shape `(4,)` containing `[y, v_y, phi, omega]`.
-
     Returns:
         A scalar, nonpositive iff the state is in the target set.
     """
-
     # PART (b): WRITE YOUR CODE BELOW ###############################################
     stateInd1 = jnp.where(state[0] >= 5., -1., 1.) #returns a negative if y is feasible
     stateInd11 = jnp.where(state[0] <= 6., -1., 1.) #returns a negative if y is feasible
@@ -124,9 +120,7 @@ def target_set(state):
     stateInd = jnp.amax(jnp.array([stateInd1,stateInd11,stateInd2,stateInd22, stateInd3,stateInd33, stateInd4, stateInd44]))
 
     return stateInd
-   #################################################################################
-   
-
+    #################################################################################
 
 
 @jax.jit
@@ -135,7 +129,6 @@ def envelope_set(state):
     
     Args:
         state: An unbatched (!) state vector, an array of shape `(4,)` containing `[y, v_y, phi, omega]`.
-
     Returns:
         A scalar, nonpositive iff the state is in the operational envelope.
     """
@@ -269,7 +262,7 @@ solver_settings = hj.SolverSettings.with_accuracy(
 
 # Propagate the HJ PDE _backwards_ in time.
 initial_time = 0.
-final_time = -15.
+final_time = -5.
 values = hj.step(solver_settings, planar_quadrotor, grid, initial_time, terminal_values, final_time).block_until_ready()
 grad_values = grid.grad_values(values)
 
@@ -303,35 +296,34 @@ def animate_optimal_trajectory(full_state, dt=1 / 100, T=5, display_in_notebook=
     return fig, anim
 
 # Dropping the quad straight down (v_y = -5, mimicking waiting for a sec after the drop to turn the props on).
-# state = [5., -5., 0., 0.]
-# fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
-# ani.save("planar_quad_1.mp4", writer="ffmpeg")
-# plt.show()
+state = [5., -5., 0., 0.]
+fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
+ani.save("planar_quad_1.mp4", writer="ffmpeg")
+plt.show()
 
-# # Flipping the quad up into the air.
-# state = [6., 2., -3 * np.pi / 4, -4.0]
-# fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
-# ani.save("planar_quad_2.mp4", writer="ffmpeg")
-# plt.show()
+# Flipping the quad up into the air.
+state = [6., 2., -3 * np.pi / 4, -4.0]
+fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
+ani.save("planar_quad_2.mp4", writer="ffmpeg")
+plt.show()
 
-# # Dropping the quad like a falling leaf.
-# state = [8., -1., np.pi / 2, 2.]
-# fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
-# ani.save("planar_quad_3.mp4", writer="ffmpeg")
-# plt.show()
+# Dropping the quad like a falling leaf.
+state = [8., -1., np.pi / 2, 2.]
+fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
+ani.save("planar_quad_3.mp4", writer="ffmpeg")
+plt.show()
 
-# # Too much negative vertical velocity to recover before hitting the floor.
-# state = [8., -3., np.pi / 2, 2.]
-# fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
-# ani.save("planar_quad_4.mp4", writer="ffmpeg")
-# plt.show()
+# Too much negative vertical velocity to recover before hitting the floor.
+state = [8., -3., np.pi / 2, 2.]
+fig, ani = animate_optimal_trajectory(np.array([0, 0] + state))
+ani.save("planar_quad_4.mp4", writer="ffmpeg")
+plt.show()
 
 # Examining an isosurface (exercise part (d)).
 import plotly.graph_objects as go
 
-i_y = 15
-fig = go.Figure(data=go.Isosurface(
-                             x=grid.states[i_y, ..., 1].ravel(),
+i_y = 18
+fig = go.Figure(data=go.Isosurface(x=grid.states[i_y, ..., 1].ravel(),
                              y=grid.states[i_y, ..., 2].ravel(),
                              z=grid.states[i_y, ..., 3].ravel(),
                              value=values[i_y].ravel(),
